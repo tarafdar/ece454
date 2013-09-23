@@ -1,0 +1,36 @@
+SEQUENTIAL COMPILE TIMES
+Average Compilation time(USER) for  gprof using 5 repetions avg: 3.688
+Average Compilation time(USER) for  gcov using 5 repetions avg: 4.308
+Average Compilation time(USER) for  g using 5 repetions avg: 3.704
+Average Compilation time(USER) for  O2 using 5 repetions avg: 8.484
+Average Compilation time(USER) for  O3 using 5 repetions avg: 10.652
+Average Compilation time(USER) for  Os using 5 repetions avg: 7.18
+
+
+PARALLEL COMPILE TIMES
+Average time{ELAPSED) for  parallel compilation with 1 threads using 5 repetions avg: 13.008
+Average time{ELAPSED) for  parallel compilation with 2 threads using 5 repetions avg: 6.672
+Average time{ELAPSED) for  parallel compilation with 4 threads using 5 repetions avg: 3.842
+Average time{ELAPSED) for  parallel compilation with 8 threads using 5 repetions avg: 3.778
+
+
+PROGRAM SIZES
+gprof -rwxr-xr-x 1 tarafda1 ele1T4 822176 Sep 23 12:45 vpr
+
+gcov -rwxr-xr-x 1 tarafda1 ele1T4 1087894 Sep 23 12:46 vpr
+
+g -rwxr-xr-x 1 tarafda1 ele1T4 817800 Sep 23 12:46 vpr
+
+O2 -rwxr-xr-x 1 tarafda1 ele1T4 335691 Sep 23 12:47 vpr
+
+O3 -rwxr-xr-x 1 tarafda1 ele1T4 379337 Sep 23 12:49 vpr
+
+Os -rwxr-xr-x 1 tarafda1 ele1T4 284392 Sep 23 12:49 vpr
+
+PROGRAM RUN TIMES
+Average Run time(USER) for gprof using 5 repetitions avg:  1.442
+Average Run time(USER) for gcov using 5 repetitions avg:  1.272
+Average Run time(USER) for g using 5 repetitions avg:  1.192
+Average Run time(USER) for O2 using 5 repetitions avg:  0.518
+Average Run time(USER) for O3 using 5 repetitions avg:  0.498
+Average Run time(USER) for Os using 5 repetitions avg:  0.61
