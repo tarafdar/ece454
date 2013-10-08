@@ -9,6 +9,8 @@
 void attempt_three(int dim, pixel *src, pixel *dst); 
 void attempt_four(int dim, pixel *src, pixel *dst); 
 void attempt_five(int dim, pixel *src, pixel *dst); 
+void attempt_six(int dim, pixel *src, pixel *dst); 
+void attempt_seven(int dim, pixel *src, pixel *dst); 
 
 /* 
  * ECE454 Students: 
@@ -56,7 +58,7 @@ void naive_rotate(int dim, pixel *src, pixel *dst)
 char rotate_descr[] = "rotate: Current working version";
 void rotate(int dim, pixel *src, pixel *dst) 
 {
-	attempt_five(dim,src,dst);
+	attempt_seven(dim,src,dst);
 
 }
 
@@ -165,8 +167,8 @@ void attempt_five(int dim, pixel *src, pixel *dst)
 
 
 
-    for (j = 0; j < dim; j+=8){
-	for (i = 0; i < dim; i+=8){
+    for (j = 0; j < dim; j+=16){
+	for (i = 0; i < dim; i+=16){
 	    dim_min_one_min_j_mult_dim = (dim - 1 -j) *dim;
 	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j, dim)];
@@ -176,6 +178,14 @@ void attempt_five(int dim, pixel *src, pixel *dst)
 	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j, dim)];
 	
 
 	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+1)) *dim;	    
@@ -187,6 +197,14 @@ void attempt_five(int dim, pixel *src, pixel *dst)
 	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 1, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 1, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 1, dim)];
 	    
 	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+2)) *dim;	    
 	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 2, dim)];
@@ -197,6 +215,14 @@ void attempt_five(int dim, pixel *src, pixel *dst)
 	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 2, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 2, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 2, dim)];
 
 	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+3)) *dim;	    
 	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 3, dim)];
@@ -207,6 +233,14 @@ void attempt_five(int dim, pixel *src, pixel *dst)
 	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 3, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 3, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 3, dim)];
 
 	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+4)) *dim;	    
 	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 4, dim)];
@@ -217,6 +251,14 @@ void attempt_five(int dim, pixel *src, pixel *dst)
 	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 4, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 4, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 4, dim)];
 
 	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+5)) *dim;	    
 	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 5, dim)];
@@ -227,6 +269,14 @@ void attempt_five(int dim, pixel *src, pixel *dst)
 	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 5, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 5, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 5, dim)];
 
 	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+6)) *dim;	    
 	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 6, dim)];
@@ -237,6 +287,14 @@ void attempt_five(int dim, pixel *src, pixel *dst)
 	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 6, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 6, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 6, dim)];
 
 	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+7)) *dim;	    
 	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 7, dim)];
@@ -247,7 +305,159 @@ void attempt_five(int dim, pixel *src, pixel *dst)
 	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 7, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 7, dim)];
 	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 7, dim)];
 
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+8)) *dim;
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 8, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 8, dim)];
+	
+
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+9)) *dim;	    
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 9, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 9, dim)];
+	    
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+10)) *dim;	    
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 10, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 10, dim)];
+
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+11)) *dim;	    
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 11, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 11, dim)];
+
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+12)) *dim;	    
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 12, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 12, dim)];
+
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+13)) *dim;	    
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 13, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 13, dim)];
+
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+14)) *dim;	    
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 14, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 14, dim)];
+
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+15)) *dim;	    
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 8] = src[RIDX(i + 8, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 9] = src[RIDX(i + 9, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 10] = src[RIDX(i + 10, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 11] = src[RIDX(i + 11, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 12] = src[RIDX(i + 12, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 13] = src[RIDX(i + 13, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 14] = src[RIDX(i + 14, j + 15, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 15] = src[RIDX(i + 15, j + 15, dim)];
 	}
 
 	//for(;i<dim;i++){
@@ -267,6 +477,66 @@ void attempt_five(int dim, pixel *src, pixel *dst)
  *     driver program, it will test and report the performance of each
  *     registered test function.  
  *********************************************************************/
+
+char rotate_six_descr[] = "sixth attempt: switch i and j code motion and tile";
+void attempt_six(int dim, pixel *src, pixel *dst) 
+{
+    int i_block, j_block;
+    int dim_min_one_min_j_mult_dim;
+    int i, j;
+    int blocksize = 16;
+    for (j_block = 0; j_block < dim; j_block+=blocksize){
+	for (i_block = 0; i_block < dim; i_block+=blocksize){
+	    for(j=j_block; j<j_block+blocksize;j++){   
+	        dim_min_one_min_j_mult_dim = (dim - 1 - j) * dim;
+	        for(i=i_block; i<i_block+blocksize;i++)
+	    		dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j, dim)];
+	     }
+	}
+
+    }
+}
+
+char rotate_seven_descr[] = "sixth attempt: switch i and j code motion and tile and unroll";
+void attempt_seven(int dim, pixel *src, pixel *dst) 
+{
+    int i_block, j_block;
+    int dim_min_one_min_j_mult_dim;
+    int i, j;
+    int blocksize = 16;
+
+//    if (dim==4096)
+//	blocksize = 64;
+
+
+    for (j_block = 0; j_block < dim; j_block+=blocksize){
+	for (i_block = 0; i_block < dim; i_block+=blocksize){
+	    for(j=j_block; j<j_block+blocksize;j++){   
+	        for(i=i_block; i<i_block+blocksize;i+=8){
+	        	dim_min_one_min_j_mult_dim = (dim - 1 - j) * dim;
+	    		dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j, dim)];
+	    		dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j, dim)];
+	    		dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j, dim)];
+	    		dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j, dim)];
+	    		dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j, dim)];
+	    		dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j, dim)];
+	    		dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j, dim)];
+	    		dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j, dim)];
+	        	
+		//	dim_min_one_min_j_mult_dim = (dim - 1 - (j+1)) * dim;
+	    	//	dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 1, dim)];
+	    	//	dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 1, dim)];
+	    	//	dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 1, dim)];
+	    	//	dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 1, dim)];
+	    	//	dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 1, dim)];
+	    	//	dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 1, dim)];
+	    	//	dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 1, dim)];
+		}
+	     }
+	}
+
+    }
+}
 
 void register_rotate_functions() 
 {
