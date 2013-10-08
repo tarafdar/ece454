@@ -7,6 +7,8 @@
 #include "defs.h"
 #include "math.h"
 void attempt_three(int dim, pixel *src, pixel *dst); 
+void attempt_four(int dim, pixel *src, pixel *dst); 
+void attempt_five(int dim, pixel *src, pixel *dst); 
 
 /* 
  * ECE454 Students: 
@@ -54,7 +56,7 @@ void naive_rotate(int dim, pixel *src, pixel *dst)
 char rotate_descr[] = "rotate: Current working version";
 void rotate(int dim, pixel *src, pixel *dst) 
 {
-	attempt_three(dim,src,dst);
+	attempt_five(dim,src,dst);
 
 }
 
@@ -121,6 +123,7 @@ void attempt_three(int dim, pixel *src, pixel *dst)
     int i_mult_dim;
     int dim_squared_minus_dim =dim*dim -dim;
     int dim_squared_minus_dim_plus_i;
+    int dim_min_one = dim -1;
     //for(k=0; k<10; k++){
     pixel * src_temp;
     for (i = 0; i < dim; i++){
@@ -128,6 +131,9 @@ void attempt_three(int dim, pixel *src, pixel *dst)
         dim_squared_minus_dim_plus_i= dim_squared_minus_dim + i;
 	src_temp = src+i_mult_dim;
 	for (j = 0; j < dim; j++){
+//	    dst[RIDX(i, dim_min_one-j, dim)] = src_temp[j];
+
+//	    dst[RIDX(i, dim-1-j, dim)] = src_temp[j];
 	    dst[dim_squared_minus_dim_plus_i -j*dim] = src_temp[j];
 	}
     }
@@ -135,6 +141,125 @@ void attempt_three(int dim, pixel *src, pixel *dst)
 
 }
 
+char rotate_four_descr[] = "fourth attempt: switch i and j code motion";
+void attempt_four(int dim, pixel *src, pixel *dst) 
+{
+    int i, j;
+    int dim_min_one_min_j_mult_dim;
+
+
+
+    for (j = 0; j < dim; j++){
+	dim_min_one_min_j_mult_dim = (dim - 1 -j) *dim;
+	for (i = 0; i < dim; i++)
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j, dim)];
+
+    }
+}
+
+char rotate_five_descr[] = "five attempt: i and j switch plus unroll";
+void attempt_five(int dim, pixel *src, pixel *dst) 
+{
+    int i, j;
+    int dim_min_one_min_j_mult_dim;
+
+
+
+    for (j = 0; j < dim; j+=8){
+	for (i = 0; i < dim; i+=8){
+	    dim_min_one_min_j_mult_dim = (dim - 1 -j) *dim;
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j, dim)];
+	
+
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+1)) *dim;	    
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 1, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 1, dim)];
+	    
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+2)) *dim;	    
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 2, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 2, dim)];
+
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+3)) *dim;	    
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 3, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 3, dim)];
+
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+4)) *dim;	    
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 4, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 4, dim)];
+
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+5)) *dim;	    
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 5, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 5, dim)];
+
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+6)) *dim;	    
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 6, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 6, dim)];
+
+	    dim_min_one_min_j_mult_dim = (dim - 1 -(j+7)) *dim;	    
+	    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 1] = src[RIDX(i + 1, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 2] = src[RIDX(i + 2, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 3] = src[RIDX(i + 3, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 4] = src[RIDX(i + 4, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 5] = src[RIDX(i + 5, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 6] = src[RIDX(i + 6, j + 7, dim)];
+	    dst[dim_min_one_min_j_mult_dim + i + 7] = src[RIDX(i + 7, j + 7, dim)];
+
+	}
+
+	//for(;i<dim;i++){
+	//    dst[dim_min_one_min_j_mult_dim + i] = src[RIDX(i, j, dim)];
+	//}
+	
+	
+        
+        
+
+    }
+}
 /*********************************************************************
  * register_rotate_functions - Register all of your different versions
  *     of the rotate kernel with the driver by calling the
@@ -149,9 +274,9 @@ void register_rotate_functions()
 //    add_rotate_function(&rotate, rotate_descr);   
 
 //    add_rotate_function(&attempt_two, rotate_two_descr);   
-    add_rotate_function(&attempt_three, rotate_three_descr);   
-    //add_rotate_function(&attempt_four, rotate_four_descr);   
-    //add_rotate_function(&attempt_five, rotate_five_descr);   
+    //add_rotate_function(&attempt_three, rotate_three_descr);   
+//    add_rotate_function(&attempt_four, rotate_four_descr);   
+//    add_rotate_function(&attempt_five, rotate_five_descr);   
     //add_rotate_function(&attempt_six, rotate_six_descr);   
     //add_rotate_function(&attempt_seven, rotate_seven_descr);   
     //add_rotate_function(&attempt_eight, rotate_eight_descr);   
