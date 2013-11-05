@@ -1470,7 +1470,52 @@ try_swap(float t,
 
 	    bb_index = 0;
 
-	    for(k = 0; k < num_nets_affected; k++)
+	    for(k = 0; k < num_nets_affected - 1; k+=2)
+		{
+		    inet = nets_to_update[k];
+
+		    /* If we swapped two blocks connected to the same net, its bounding box *
+		     * doesn't change.                                                      */
+
+		    if(net_block_moved[k] != FROM_AND_TO)
+			{
+		    bb_coords[inet] = bb_coord_new[bb_index];
+		    if(net[inet].num_sinks >= SMALL_NET)
+			bb_num_on_edges[inet] = bb_edge_new[bb_index];
+
+		    bb_index++;
+
+		    net_cost[inet] = temp_net_cost[inet];
+		    temp_net_cost[inet] = -1;
+		//	    continue;
+			}
+			else
+			    temp_net_cost[inet] = -1;
+			
+
+		    inet = nets_to_update[k + 1];
+
+		    /* If we swapped two blocks connected to the same net, its bounding box *
+		     * doesn't change.                                                      */
+
+		    if(net_block_moved[k+1] != FROM_AND_TO)
+			{
+		    bb_coords[inet] = bb_coord_new[bb_index];
+		    if(net[inet].num_sinks >= SMALL_NET)
+			bb_num_on_edges[inet] = bb_edge_new[bb_index];
+
+		    bb_index++;
+
+		    net_cost[inet] = temp_net_cost[inet];
+		    temp_net_cost[inet] = -1;
+		//	    continue;
+			}
+			else
+			    temp_net_cost[inet] = -1;
+			
+		}
+
+	    for(; k < num_nets_affected; k++)
 		{
 		    inet = nets_to_update[k];
 
@@ -1492,7 +1537,6 @@ try_swap(float t,
 		    net_cost[inet] = temp_net_cost[inet];
 		    temp_net_cost[inet] = -1;
 		}
-
 	    /* Update fb data structures since we kept the move. */
 	    /* Swap physical location */
 	    grid[x_to][y_to].blocks[z_to] = b_from;
