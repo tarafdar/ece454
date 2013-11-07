@@ -248,21 +248,31 @@ void remove_from_free_list(void* list, void *bp){
 
 
  }
+void split(void* bp, size_t asize, size_t bsize, size_t split_size)
+{
+  PUT(HDRP(bp), PACK(asize, 1));
+  PUT(FTRP(bp), PACK(asize, 1));
 
+  remove_from_free_list(bp, bsize);
+   
+  //allocate the new split block into the appropriate free list
+}
 
 void place_find_fit(void* bp, size_t asize)
 {
   /* Get the current block size */
   size_t bsize = GET_SIZE(HDRP(bp));
-
-  PUT(HDRP(bp), PACK(bsize, 1));
-  PUT(FTRP(bp), PACK(bsize, 1));
-
+  size_t split_size = bsize - asize;
+  if (split_size == OVERHEAD)  { //Not enough room for anything else except some overhead, do not split
+    PUT(HDRP(bp), PACK(bsize, 1));
+    PUT(FTRP(bp), PACK(bsize, 1));
+    //REMOVE FROM FREE LIST
+    void* list= free_listp + find_list(bsize); //find the free list
+    remove_from_free_list(list, bp);
+  }
+  else {
   
-
-  //REMOVE FROM FREE LIST
-  void* list= free_listp + find_list(bsize); //find the free list
-  remove_from_free_list(list, bp);  
+  }
 }
 
 void place_extend_heap(void* bp, size_t asize)
