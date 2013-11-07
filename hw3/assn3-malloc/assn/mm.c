@@ -105,6 +105,56 @@ void* free_listp = NULL;
      return 0;
  }
 
+int find_list(size_t asize)
+{
+    int i;
+
+    //set currSize to 8, this is the second lowest range of free lists that we can have
+    
+    int currSize = 8;
+    int retVal = -1;
+    
+    //if asize is less than currSize then we know at that iteration our index will point to the correct list
+    for(i=0; i<NUM_FREE_LISTS; i++){
+        if(asize < currSize){
+           retVal=i;
+           break;
+        }
+        currSize = currSize << 1;
+    }
+    
+    if(retVal == -1)
+        retVal = NUM_FREE_LISTS;
+
+    return retVal * WSIZE; //returns the pointer to the free list we are looking at
+
+} 
+
+void remove_from_free_list(void *bp, size_t bsize){
+  void* list= free_listp + find_list(bsize); //find the free list
+
+  if(PREV_FREE_BLOCK(bp) == 0){ //if the block that we want to free is the first block of the list
+    //PUTP(list, GETP(bp)); //have the list point to the next of the current block
+    PUTP(list, NEXT_FREE_BLOCK(bp)); //have the list point to the next of the current block
+    //if(GETP(bp)!=0) //if the next guy is not null then have his previous point to NULL
+    //if(GETP(bp)!=0) //if the next guy is not null then have his previous point to NULL
+    if(NEXT_FREE_BLOCK(bp)!=0) //if the next guy is not null then have his previous point to NULL
+        PUTP(NEXT_FREE_BLOCK_PREV(bp), 0); //set the next block's previous to point to NULL
+        //PUTP(GETP(bp) + 1, 0); //set the next block's previous to point to NULL
+  }
+  else{
+    //PUTP(GETP(bp + 8),GETP(bp)); //set the next pointer of the previous to point to the next of the current block
+    PUTP(PREV_FREE_BLOCK(bp),NEXT_FREE_BLOCK(bp)); //set the next pointer of the previous to point to the next of the current block
+    if(NEXT_FREE_BLOCK(bp)!=0) //if the next guy is not null then have his previous point to NULL
+    //if(GETP(bp)!=0) //if the next guy is not null then have his previous point to the current block's previous
+        PUTP(NEXT_FREE_BLOCK_PREV(bp), PREV_FREE_BLOCK(bp)); //set the next block's previous to point to the previous block
+        //PUTP(GETP(bp) + 1, GETP(bp+8)); //set the next block's previous to point to the previous block
+   }        
+
+
+
+ }
+
 /**********************************************************
  * coalesce
  * Covers the 4 cases discussed in the text:
@@ -118,30 +168,43 @@ void *coalesce(void *bp)
     size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
     size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
     size_t size = GET_SIZE(HDRP(bp));
-
+    size_t bsize_next;
+    size_t bsize_prev;
     if (prev_alloc && next_alloc) {       /* Case 1 */
         return bp;
     }
 
     else if (prev_alloc && !next_alloc) { /* Case 2 */
-        size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
+        //remove the next guy from his free list
+        bsize_next = GET_SIZE(HDRP(NEXT_BLKP(bp)));              
+        size += bsize_next;
         PUT(HDRP(bp), PACK(size, 0));
         PUT(FTRP(bp), PACK(size, 0));
+        remove_from_free_list(NEXT_BLKP(bp), bsize_next);  
         return (bp);
     }
 
     else if (!prev_alloc && next_alloc) { /* Case 3 */
-        size += GET_SIZE(HDRP(PREV_BLKP(bp)));
+        //remove the prev guy from his free list
+        bsize_prev = GET_SIZE(HDRP(PREV_BLKP(bp)));              
+
+        size += bsize_prev;
         PUT(FTRP(bp), PACK(size, 0));
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+        remove_from_free_list(PREV_BLKP(bp), bsize_prev);  
         return (PREV_BLKP(bp));
     }
 
     else {            /* Case 4 */
-        size += GET_SIZE(HDRP(PREV_BLKP(bp)))  +
-            GET_SIZE(FTRP(NEXT_BLKP(bp)))  ;
+        //remove both prev and next guy from their from list
+        bsize_next = GET_SIZE(HDRP(NEXT_BLKP(bp)));              
+        bsize_prev = GET_SIZE(HDRP(PREV_BLKP(bp)));              
+
+        size += bsize_prev  + bsize_next;
         PUT(HDRP(PREV_BLKP(bp)), PACK(size,0));
         PUT(FTRP(NEXT_BLKP(bp)), PACK(size,0));
+        remove_from_free_list(NEXT_BLKP(bp), bsize_next);  
+        remove_from_free_list(PREV_BLKP(bp), bsize_prev);  
         return (PREV_BLKP(bp));
     }
 }
@@ -172,30 +235,6 @@ void *extend_heap(size_t words)
    return bp;
 }
 
-int find_list(size_t asize)
-{
-    int i;
-
-    //set currSize to 8, this is the second lowest range of free lists that we can have
-    
-    int currSize = 8;
-    int retVal = -1;
-    
-    //if asize is less than currSize then we know at that iteration our index will point to the correct list
-    for(i=0; i<NUM_FREE_LISTS; i++){
-        if(asize < currSize){
-           retVal=i;
-           break;
-        }
-        currSize = currSize << 1;
-    }
-    
-    if(retVal == -1)
-        retVal = NUM_FREE_LISTS;
-
-    return retVal * WSIZE; //returns the pointer to the free list we are looking at
-
-} 
 
 /**********************************************************
  * find_fit
@@ -221,31 +260,6 @@ void * find_fit(size_t asize)
     return NULL;
 }
 
-/**********************************************************
- * place
- * Mark the block as allocated
- **********************************************************/
-void remove_from_free_list(void* list, void *bp){
-
-  if(PREV_FREE_BLOCK(bp) == 0){ //if the block that we want to free is the first block of the list
-    //PUTP(list, GETP(bp)); //have the list point to the next of the current block
-    PUTP(list, NEXT_FREE_BLOCK(bp)); //have the list point to the next of the current block
-    //if(GETP(bp)!=0) //if the next guy is not null then have his previous point to NULL
-    //if(GETP(bp)!=0) //if the next guy is not null then have his previous point to NULL
-    if(NEXT_FREE_BLOCK(bp)!=0) //if the next guy is not null then have his previous point to NULL
-        PUTP(NEXT_FREE_BLOCK_PREV(bp), 0); //set the next block's previous to point to NULL
-        //PUTP(GETP(bp) + 1, 0); //set the next block's previous to point to NULL
-  }
-  else{
-    //PUTP(GETP(bp + 8),GETP(bp)); //set the next pointer of the previous to point to the next of the current block
-    PUTP(PREV_FREE_BLOCK(bp),NEXT_FREE_BLOCK(bp)); //set the next pointer of the previous to point to the next of the current block
-    if(NEXT_FREE_BLOCK(bp)!=0) //if the next guy is not null then have his previous point to NULL
-    //if(GETP(bp)!=0) //if the next guy is not null then have his previous point to the current block's previous
-        PUTP(NEXT_FREE_BLOCK_PREV(bp), PREV_FREE_BLOCK(bp)); //set the next block's previous to point to the previous block
-        //PUTP(GETP(bp) + 1, GETP(bp+8)); //set the next block's previous to point to the previous block
-   }        
-
-
 
  }
 void split(void* bp, size_t asize, size_t bsize, size_t split_size)
@@ -258,6 +272,10 @@ void split(void* bp, size_t asize, size_t bsize, size_t split_size)
   //allocate the new split block into the appropriate free list
 }
 
+/**********************************************************
+ * place
+ * Mark the block as allocated
+ **********************************************************/
 void place_find_fit(void* bp, size_t asize)
 {
   /* Get the current block size */
@@ -273,6 +291,9 @@ void place_find_fit(void* bp, size_t asize)
   else {
   
   }
+
+  //REMOVE FROM FREE LIST
+  remove_from_free_list(bp, bsize);  
 }
 
 void place_extend_heap(void* bp, size_t asize)
@@ -298,6 +319,7 @@ void mm_free(void *bp)
     PUT(HDRP(bp), PACK(size,0));
     PUT(FTRP(bp), PACK(size,0));
 
+    bp = coalesce(bp);
 
     //ADD TO FREE LIST
     void* list= free_listp + find_list(size); //find the free list
@@ -308,7 +330,6 @@ void mm_free(void *bp)
     PUTP(bp + WSIZE, 0); //set curr guys prev to point to NULL    
     PUTP(list, bp); //set head of list to point to curr guy
 
-    //coalesce(bp);
 }
 
 
