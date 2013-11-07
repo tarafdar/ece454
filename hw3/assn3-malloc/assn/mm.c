@@ -225,20 +225,8 @@ void * find_fit(size_t asize)
  * place
  * Mark the block as allocated
  **********************************************************/
-void place_find_fit(void* bp, size_t asize)
-{
-  /* Get the current block size */
-  size_t bsize = GET_SIZE(HDRP(bp));
+void remove_from_free_list(void* list, void *bp){
 
-  PUT(HDRP(bp), PACK(bsize, 1));
-  PUT(FTRP(bp), PACK(bsize, 1));
-
-  
-
-  //REMOVE FROM FREE LIST
-  void* list= free_listp + find_list(bsize); //find the free list
-  
-  //if(GETP(bp + 8) == 0){ //if the block that we want to free is the first block of the list
   if(PREV_FREE_BLOCK(bp) == 0){ //if the block that we want to free is the first block of the list
     //PUTP(list, GETP(bp)); //have the list point to the next of the current block
     PUTP(list, NEXT_FREE_BLOCK(bp)); //have the list point to the next of the current block
@@ -255,7 +243,26 @@ void place_find_fit(void* bp, size_t asize)
     //if(GETP(bp)!=0) //if the next guy is not null then have his previous point to the current block's previous
         PUTP(NEXT_FREE_BLOCK_PREV(bp), PREV_FREE_BLOCK(bp)); //set the next block's previous to point to the previous block
         //PUTP(GETP(bp) + 1, GETP(bp+8)); //set the next block's previous to point to the previous block
-  }        
+   }        
+
+
+
+ }
+
+
+void place_find_fit(void* bp, size_t asize)
+{
+  /* Get the current block size */
+  size_t bsize = GET_SIZE(HDRP(bp));
+
+  PUT(HDRP(bp), PACK(bsize, 1));
+  PUT(FTRP(bp), PACK(bsize, 1));
+
+  
+
+  //REMOVE FROM FREE LIST
+  void* list= free_listp + find_list(bsize); //find the free list
+  remove_from_free_list(list, bp);  
 }
 
 void place_extend_heap(void* bp, size_t asize)
