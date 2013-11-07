@@ -124,7 +124,7 @@ int find_list(size_t asize)
     }
     
     if(retVal == -1)
-        retVal = NUM_FREE_LISTS;
+        retVal = NUM_FREE_LISTS - 1;
 
     return retVal * WSIZE; //returns the pointer to the free list we are looking at
 
@@ -134,21 +134,14 @@ void remove_from_free_list(void *bp, size_t bsize){
   void* list= free_listp + find_list(bsize); //find the free list
 
   if(PREV_FREE_BLOCK(bp) == 0){ //if the block that we want to free is the first block of the list
-    //PUTP(list, GETP(bp)); //have the list point to the next of the current block
     PUTP(list, NEXT_FREE_BLOCK(bp)); //have the list point to the next of the current block
-    //if(GETP(bp)!=0) //if the next guy is not null then have his previous point to NULL
-    //if(GETP(bp)!=0) //if the next guy is not null then have his previous point to NULL
     if(NEXT_FREE_BLOCK(bp)!=0) //if the next guy is not null then have his previous point to NULL
         PUTP(NEXT_FREE_BLOCK_PREV(bp), 0); //set the next block's previous to point to NULL
-        //PUTP(GETP(bp) + 1, 0); //set the next block's previous to point to NULL
   }
   else{
-    //PUTP(GETP(bp + 8),GETP(bp)); //set the next pointer of the previous to point to the next of the current block
     PUTP(PREV_FREE_BLOCK(bp),NEXT_FREE_BLOCK(bp)); //set the next pointer of the previous to point to the next of the current block
     if(NEXT_FREE_BLOCK(bp)!=0) //if the next guy is not null then have his previous point to NULL
-    //if(GETP(bp)!=0) //if the next guy is not null then have his previous point to the current block's previous
         PUTP(NEXT_FREE_BLOCK_PREV(bp), PREV_FREE_BLOCK(bp)); //set the next block's previous to point to the previous block
-        //PUTP(GETP(bp) + 1, GETP(bp+8)); //set the next block's previous to point to the previous block
    }        
 
 
@@ -177,21 +170,20 @@ void *coalesce(void *bp)
     else if (prev_alloc && !next_alloc) { /* Case 2 */
         //remove the next guy from his free list
         bsize_next = GET_SIZE(HDRP(NEXT_BLKP(bp)));              
+        remove_from_free_list(NEXT_BLKP(bp), bsize_next);  
         size += bsize_next;
         PUT(HDRP(bp), PACK(size, 0));
         PUT(FTRP(bp), PACK(size, 0));
-        remove_from_free_list(NEXT_BLKP(bp), bsize_next);  
         return (bp);
     }
 
     else if (!prev_alloc && next_alloc) { /* Case 3 */
         //remove the prev guy from his free list
         bsize_prev = GET_SIZE(HDRP(PREV_BLKP(bp)));              
-
+        remove_from_free_list(PREV_BLKP(bp), bsize_prev);  
         size += bsize_prev;
         PUT(FTRP(bp), PACK(size, 0));
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
-        remove_from_free_list(PREV_BLKP(bp), bsize_prev);  
         return (PREV_BLKP(bp));
     }
 
@@ -199,12 +191,13 @@ void *coalesce(void *bp)
         //remove both prev and next guy from their from list
         bsize_next = GET_SIZE(HDRP(NEXT_BLKP(bp)));              
         bsize_prev = GET_SIZE(HDRP(PREV_BLKP(bp)));              
-
+        
+        remove_from_free_list(NEXT_BLKP(bp), bsize_next);  
+        remove_from_free_list(PREV_BLKP(bp), bsize_prev);  
+        
         size += bsize_prev  + bsize_next;
         PUT(HDRP(PREV_BLKP(bp)), PACK(size,0));
         PUT(FTRP(NEXT_BLKP(bp)), PACK(size,0));
-        remove_from_free_list(NEXT_BLKP(bp), bsize_next);  
-        remove_from_free_list(PREV_BLKP(bp), bsize_prev);  
         return (PREV_BLKP(bp));
     }
 }
@@ -226,8 +219,8 @@ void *extend_heap(size_t words)
         return NULL;
 
     /* Initialize free block header/footer and the epilogue header */
-    PUT(HDRP(bp), PACK(size, 0));                // free block header
-    PUT(FTRP(bp), PACK(size, 0));                // free block footer
+    PUT(HDRP(bp), PACK(size, 1));                // free block header
+    PUT(FTRP(bp), PACK(size, 1));                // free block footer
     PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1));        // new epilogue header
 
     /* Coalesce if the previous block was free */
@@ -247,21 +240,24 @@ void * find_fit(size_t asize)
     int list_index= find_list(asize);
     void *listp = free_listp + list_index;
     void *bp = GETP(listp);
-     
-    for (; bp!=0; bp = GETP(bp))
-    {
-        if (!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp))))
+    int i; 
+    for(i=list_index; i<NUM_FREE_LISTS; i++){  
+        for (; bp!=0; bp = GETP(bp))
         {
-            return bp;
+            if (!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp))))
+            {
+                return bp;
+            }
+            //else if(GETP(bp)==0)
+            //    break;
         }
-        //else if(GETP(bp)==0)
-        //    break;
+        listp = free_listp + list_index;
+        bp = GETP(listp);
     }
     return NULL;
 }
 
 
- }
 void split(void* bp, size_t asize, size_t bsize, size_t split_size)
 {
   PUT(HDRP(bp), PACK(asize, 1));
@@ -280,17 +276,15 @@ void place_find_fit(void* bp, size_t asize)
 {
   /* Get the current block size */
   size_t bsize = GET_SIZE(HDRP(bp));
-  size_t split_size = bsize - asize;
-  if (split_size == OVERHEAD)  { //Not enough room for anything else except some overhead, do not split
+  //size_t split_size = bsize - asize;
+  //if (split_size == OVERHEAD)  { //Not enough room for anything else except some overhead, do not split
     PUT(HDRP(bp), PACK(bsize, 1));
     PUT(FTRP(bp), PACK(bsize, 1));
     //REMOVE FROM FREE LIST
-    void* list= free_listp + find_list(bsize); //find the free list
-    remove_from_free_list(list, bp);
-  }
-  else {
+  //}
+  //else {
   
-  }
+  //}
 
   //REMOVE FROM FREE LIST
   remove_from_free_list(bp, bsize);  
@@ -315,12 +309,12 @@ void mm_free(void *bp)
     if(bp == NULL){
       return;
     }
+
+    bp = coalesce(bp);
     size_t size = GET_SIZE(HDRP(bp));
     PUT(HDRP(bp), PACK(size,0));
     PUT(FTRP(bp), PACK(size,0));
-
-    bp = coalesce(bp);
-
+    
     //ADD TO FREE LIST
     void* list= free_listp + find_list(size); //find the free list
     PUTP(bp, GETP(list)); //set the next value of the free block to point to the head of list
@@ -365,7 +359,8 @@ void *mm_malloc(size_t size)
     }
 
     /* No fit found. Get more memory and place the block */
-    extendsize = MAX(asize, CHUNKSIZE);
+    //extendsize = MAX(asize, CHUNKSIZE);
+    extendsize = asize;
     if ((bp = extend_heap(extendsize/WSIZE)) == NULL)
         return NULL;
     place_extend_heap(bp, asize);
