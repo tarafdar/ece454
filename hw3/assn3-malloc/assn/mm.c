@@ -72,6 +72,9 @@ team_t team = {
 #define PREV_FREE_BLOCK(bp) (GETP(bp + WSIZE))
 
 #define NEXT_FREE_BLOCK_PREV(bp) (GETP(bp) + 1)
+#define NEW_SPLIT_BLOCK(bp,asize) ((void*)((char*)bp + asize))
+
+
 /* alignment */
 #define ALIGNMENT 16
 /* rounds up to the nearest multiple of ALIGNMENT */
@@ -143,10 +146,19 @@ void remove_from_free_list(void *bp, size_t bsize){
     if(NEXT_FREE_BLOCK(bp)!=0) //if the next guy is not null then have his previous point to NULL
         PUTP(NEXT_FREE_BLOCK_PREV(bp), PREV_FREE_BLOCK(bp)); //set the next block's previous to point to the previous block
    }        
+}
 
+void add_to_free_list(void *bp, size_t bsize) {
+  void* list= free_listp + find_list(bsize); //find the free list
 
-
- }
+  PUTP(bp, GETP(list)); //set the next value of the free block to point to the head of list
+    
+  if(NEXT_FREE_BLOCK(bp)!= 0) // check if next guy is null 
+    PUTP(NEXT_FREE_BLOCK_PREV(bp), bp); //set next guy's prev to point to the curr
+  PUTP(bp + WSIZE, 0); //set curr guys prev to point to NULL    
+  PUTP(list, bp); //set head of list to point to curr guy
+  
+}
 
 /**********************************************************
  * coalesce
@@ -219,8 +231,8 @@ void *extend_heap(size_t words)
         return NULL;
 
     /* Initialize free block header/footer and the epilogue header */
-    PUT(HDRP(bp), PACK(size, 1));                // free block header
-    PUT(FTRP(bp), PACK(size, 1));                // free block footer
+    PUT(HDRP(bp), PACK(size, 0));                // free block header
+    PUT(FTRP(bp), PACK(size, 0));                // free block footer
     PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1));        // new epilogue header
 
     /* Coalesce if the previous block was free */
@@ -260,12 +272,18 @@ void * find_fit(size_t asize)
 
 void split(void* bp, size_t asize, size_t bsize, size_t split_size)
 {
+  //allocate the new allocated block, and remove it from the free list
   PUT(HDRP(bp), PACK(asize, 1));
   PUT(FTRP(bp), PACK(asize, 1));
-
   remove_from_free_list(bp, bsize);
    
   //allocate the new split block into the appropriate free list
+  //char* split_bp = (char*)bp + asize;
+  void* split_bp = NEW_SPLIT_BLOCK(bp,asize);
+  PUT(HDRP(split_bp), PACK(split_size,0));
+  PUT(FTRP(split_bp), PACK(split_size,0));
+  add_to_free_list(split_bp, split_size);
+   
 }
 
 /**********************************************************
@@ -276,18 +294,18 @@ void place_find_fit(void* bp, size_t asize)
 {
   /* Get the current block size */
   size_t bsize = GET_SIZE(HDRP(bp));
-  //size_t split_size = bsize - asize;
-  //if (split_size == OVERHEAD)  { //Not enough room for anything else except some overhead, do not split
+  size_t split_size = bsize - asize;
+  if (split_size <= OVERHEAD)  { //Not enough room for anything else except some overhead, do not split
     PUT(HDRP(bp), PACK(bsize, 1));
     PUT(FTRP(bp), PACK(bsize, 1));
     //REMOVE FROM FREE LIST
-  //}
-  //else {
-  
-  //}
+    remove_from_free_list(bp, bsize);  
+  }
+  else {
+    split(bp, asize, bsize, split_size);  
+  }
 
   //REMOVE FROM FREE LIST
-  remove_from_free_list(bp, bsize);  
 }
 
 void place_extend_heap(void* bp, size_t asize)
@@ -314,16 +332,11 @@ void mm_free(void *bp)
     size_t size = GET_SIZE(HDRP(bp));
     PUT(HDRP(bp), PACK(size,0));
     PUT(FTRP(bp), PACK(size,0));
-    
-    //ADD TO FREE LIST
-    void* list= free_listp + find_list(size); //find the free list
-    PUTP(bp, GETP(list)); //set the next value of the free block to point to the head of list
-    
-    if(NEXT_FREE_BLOCK(bp)!= 0) // check if next guy is null 
-        PUTP(NEXT_FREE_BLOCK_PREV(bp), bp); //set next guy's prev to point to the curr
-    PUTP(bp + WSIZE, 0); //set curr guys prev to point to NULL    
-    PUTP(list, bp); //set head of list to point to curr guy
 
+
+    //ADD TO FREE LIST
+
+    add_to_free_list(bp, size);
 }
 
 
