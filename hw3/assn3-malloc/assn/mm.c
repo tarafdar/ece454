@@ -41,7 +41,7 @@ team_t team = {
 *************************************************************************/
 #define WSIZE       sizeof(void *)         /* word size (bytes) */
 #define DSIZE       (2 * WSIZE)            /* doubleword size (bytes) */
-#define CHUNKSIZE   (1<<7)      /* initial heap size (bytes) */
+#define CHUNKSIZE   (1<<10)      /* initial heap size (bytes) */
 #define OVERHEAD    DSIZE     /* overhead of header and footer (bytes) */
 
 #define MAX(x,y) ((x) > (y)?(x) :(y))
@@ -114,12 +114,12 @@ int find_list(size_t asize)
 
     //set currSize to 8, this is the second lowest range of free lists that we can have
     
-    int currSize = 8;
+    int currSize = 1024;
     int retVal = -1;
     
     //if asize is less than currSize then we know at that iteration our index will point to the correct list
     for(i=0; i<NUM_FREE_LISTS; i++){
-        if(asize < currSize){
+        if(asize < (currSize)){
            retVal=i;
            break;
         }
@@ -236,7 +236,11 @@ void *extend_heap(size_t words)
     PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1));        // new epilogue header
 
     /* Coalesce if the previous block was free */
-   // return coalesce(bp);
+   bp = coalesce(bp);
+   //size = GET_SIZE(bp);
+   // PUT(HDRP(bp), PACK(size, 0));                // free block header
+   // PUT(FTRP(bp), PACK(size, 0));                // free block footer
+   // PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1));        // new epilogue header
    return bp;
 }
 
@@ -253,7 +257,7 @@ void * find_fit(size_t asize)
     void *listp = free_listp + list_index;
     void *bp = GETP(listp);
     int i; 
-    for(i=list_index; i<NUM_FREE_LISTS; i++){  
+   for(i=list_index; i<NUM_FREE_LISTS*WSIZE; i+=WSIZE){  
         for (; bp!=0; bp = GETP(bp))
         {
             if (!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp))))
@@ -263,7 +267,7 @@ void * find_fit(size_t asize)
             //else if(GETP(bp)==0)
             //    break;
         }
-        listp = free_listp + list_index;
+        listp = free_listp + i;
         bp = GETP(listp);
     }
     return NULL;
@@ -276,6 +280,23 @@ void split(void* bp, size_t asize, size_t bsize, size_t split_size)
   PUT(HDRP(bp), PACK(asize, 1));
   PUT(FTRP(bp), PACK(asize, 1));
   remove_from_free_list(bp, bsize);
+   
+  //allocate the new split block into the appropriate free list
+  //char* split_bp = (char*)bp + asize;
+  void* split_bp = NEW_SPLIT_BLOCK(bp,asize);
+  PUT(HDRP(split_bp), PACK(split_size,0));
+  PUT(FTRP(split_bp), PACK(split_size,0));
+  //split_bp = coalesce(split_bp);
+  //split_
+  add_to_free_list(split_bp, split_size);
+   
+}
+
+void split_after_extend(void* bp, size_t asize, size_t bsize, size_t split_size)
+{
+  //allocate the new allocated block, and remove it from the free list
+  PUT(HDRP(bp), PACK(asize, 1));
+  PUT(FTRP(bp), PACK(asize, 1));
    
   //allocate the new split block into the appropriate free list
   //char* split_bp = (char*)bp + asize;
@@ -295,7 +316,7 @@ void place_find_fit(void* bp, size_t asize)
   /* Get the current block size */
   size_t bsize = GET_SIZE(HDRP(bp));
   size_t split_size = bsize - asize;
-  if (split_size <= OVERHEAD)  { //Not enough room for anything else except some overhead, do not split
+ if (split_size <= OVERHEAD*2)  { //Not enough room for anything else except some overhead, do not split
     PUT(HDRP(bp), PACK(bsize, 1));
     PUT(FTRP(bp), PACK(bsize, 1));
     //REMOVE FROM FREE LIST
@@ -312,9 +333,16 @@ void place_extend_heap(void* bp, size_t asize)
 {
   /* Get the current block size */
   size_t bsize = GET_SIZE(HDRP(bp));
+  size_t split_size = bsize - asize;
 
-  PUT(HDRP(bp), PACK(bsize, 1));
-  PUT(FTRP(bp), PACK(bsize, 1));
+
+  if (split_size <= OVERHEAD)  { //Not enough room for anything else except some overhead, do not split
+    PUT(HDRP(bp), PACK(bsize, 1));
+    PUT(FTRP(bp), PACK(bsize, 1));
+  }
+  else {
+    split_after_extend(bp, asize, bsize, split_size);  
+  }
 
 
 }
@@ -324,10 +352,10 @@ void place_extend_heap(void* bp, size_t asize)
  **********************************************************/
 void mm_free(void *bp)
 {
+   
     if(bp == NULL){
       return;
     }
-
     bp = coalesce(bp);
     size_t size = GET_SIZE(HDRP(bp));
     PUT(HDRP(bp), PACK(size,0));
@@ -372,8 +400,8 @@ void *mm_malloc(size_t size)
     }
 
     /* No fit found. Get more memory and place the block */
-    //extendsize = MAX(asize, CHUNKSIZE);
-    extendsize = asize;
+    extendsize = MAX(asize, CHUNKSIZE);
+    //extendsize = asize;
     if ((bp = extend_heap(extendsize/WSIZE)) == NULL)
         return NULL;
     place_extend_heap(bp, asize);
@@ -400,7 +428,31 @@ void *mm_realloc(void *ptr, size_t size)
     void *oldptr = ptr;
     void *newptr;
     size_t copySize;
+    size_t nextSize = GET_SIZE(HDRP(NEXT_BLKP(ptr)));              
+    size_t currSize = GET_SIZE(HDRP(ptr));
+    void * next = NEXT_BLKP(ptr);
+    size_t asize;
 
+
+    if (size <= DSIZE)
+        asize = DSIZE + OVERHEAD;
+    else
+        asize = DSIZE * ((size + (OVERHEAD) + (DSIZE-1))/ DSIZE);
+    if (asize<= currSize){
+      return ptr;   
+        
+    }    
+    else if((asize< currSize+nextSize) && !GET_ALLOC(HDRP(NEXT_BLKP(ptr)))){
+        
+
+        remove_from_free_list(next, nextSize);
+        PUT(HDRP(ptr), PACK(currSize + nextSize,1));
+        PUT(FTRP(ptr), PACK(currSize + nextSize ,1));
+        return ptr;
+
+    }
+
+    
     newptr = mm_malloc(size);
     if (newptr == NULL)
       return NULL;
