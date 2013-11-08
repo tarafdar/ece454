@@ -14,7 +14,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdint.h>
-
+#include <stdbool.h>
 #include "mm.h"
 #include "memlib.h"
 
@@ -41,7 +41,7 @@ team_t team = {
 *************************************************************************/
 #define WSIZE       sizeof(void *)         /* word size (bytes) */
 #define DSIZE       (2 * WSIZE)            /* doubleword size (bytes) */
-#define CHUNKSIZE   (1<<10)      /* initial heap size (bytes) */
+#define CHUNKSIZE   (1<<14)      /* initial heap size (bytes) */
 #define OVERHEAD    DSIZE     /* overhead of header and footer (bytes) */
 
 #define MAX(x,y) ((x) > (y)?(x) :(y))
@@ -84,6 +84,7 @@ team_t team = {
 #define BEGIN_HEAP 16
 void* heap_listp = NULL;
 void* free_listp = NULL;
+int num_allocs = 0;
 /**********************************************************
  * mm_init
  * Initialize the heap, including "allocation" of the
@@ -114,7 +115,7 @@ int find_list(size_t asize)
 
     //set currSize to 8, this is the second lowest range of free lists that we can have
     
-    int currSize = 1024;
+    int currSize = 512;
     int retVal = -1;
     
     //if asize is less than currSize then we know at that iteration our index will point to the correct list
@@ -273,79 +274,76 @@ void * find_fit(size_t asize)
     return NULL;
 }
 
-
-void split(void* bp, size_t asize, size_t bsize, size_t split_size)
+void* left_split(void* bp, size_t asize, size_t bsize, size_t split_size, bool split_from_flist)
 {
   //allocate the new allocated block, and remove it from the free list
   PUT(HDRP(bp), PACK(asize, 1));
   PUT(FTRP(bp), PACK(asize, 1));
-  remove_from_free_list(bp, bsize);
+  if (split_from_flist)  
+    remove_from_free_list(bp, bsize);
    
   //allocate the new split block into the appropriate free list
   //char* split_bp = (char*)bp + asize;
   void* split_bp = NEW_SPLIT_BLOCK(bp,asize);
   PUT(HDRP(split_bp), PACK(split_size,0));
   PUT(FTRP(split_bp), PACK(split_size,0));
-  //split_bp = coalesce(split_bp);
-  //split_
   add_to_free_list(split_bp, split_size);
-   
+  return bp;
 }
 
-void split_after_extend(void* bp, size_t asize, size_t bsize, size_t split_size)
+void* right_split(void* bp, size_t asize, size_t bsize, size_t split_size, bool split_from_flist)
 {
-  //allocate the new allocated block, and remove it from the free list
-  PUT(HDRP(bp), PACK(asize, 1));
-  PUT(FTRP(bp), PACK(asize, 1));
-   
-  //allocate the new split block into the appropriate free list
+
+  if (split_from_flist)  
+    remove_from_free_list(bp, bsize);
+  //create the new free block, and add it to the free list
+  PUT(HDRP(bp), PACK(split_size, 0));
+  PUT(FTRP(bp), PACK(split_size, 0));
+  add_to_free_list(bp, split_size);
+  
+  //allocate the new split block for the allocated block
   //char* split_bp = (char*)bp + asize;
-  void* split_bp = NEW_SPLIT_BLOCK(bp,asize);
-  PUT(HDRP(split_bp), PACK(split_size,0));
-  PUT(FTRP(split_bp), PACK(split_size,0));
-  add_to_free_list(split_bp, split_size);
-   
+  void* split_bp = NEW_SPLIT_BLOCK(bp,split_size);
+  PUT(HDRP(split_bp), PACK(asize,1));
+  PUT(FTRP(split_bp), PACK(asize,1));
+  return split_bp; 
 }
 
 /**********************************************************
  * place
  * Mark the block as allocated
  **********************************************************/
-void place_find_fit(void* bp, size_t asize)
+void* place(void* bp, size_t asize, bool place_from_flist)
 {
   /* Get the current block size */
   size_t bsize = GET_SIZE(HDRP(bp));
   size_t split_size = bsize - asize;
+  void* ret_ptr = bp;
  if (split_size <= OVERHEAD*2)  { //Not enough room for anything else except some overhead, do not split
     PUT(HDRP(bp), PACK(bsize, 1));
     PUT(FTRP(bp), PACK(bsize, 1));
-    //REMOVE FROM FREE LIST
-    remove_from_free_list(bp, bsize);  
+    //REMOVE FROM FREE LIST IF THE BLOCK WAS FROM THE FREE LIST DONT DO THIS IF IT WAS ALLOCATED WITH EXTEND HEAP
+    if (place_from_flist)
+        remove_from_free_list(bp, bsize);
+      
   }
   else {
-    split(bp, asize, bsize, split_size);  
+    if (num_allocs == 1)
+       ret_ptr = right_split(bp, asize, bsize, split_size, place_from_flist);
+    else if(num_allocs == 2) 
+       ret_ptr = left_split(bp, asize, bsize, split_size, place_from_flist);
+    else {  
+        int avg_size = (GET_SIZE(HDRP(NEXT_BLKP(bp))) + GET_SIZE(HDRP(PREV_BLKP(bp))))/ 2;
+        if (asize >= avg_size)
+            ret_ptr = left_split(bp, asize, bsize, split_size, place_from_flist);
+        else
+            ret_ptr = right_split(bp, asize, bsize, split_size, place_from_flist);
+    }        
+    //left_split(bp, asize, bsize, split_size, place_from_flist);  
   }
-
-  //REMOVE FROM FREE LIST
+  return ret_ptr;
 }
 
-void place_extend_heap(void* bp, size_t asize)
-{
-  /* Get the current block size */
-  size_t bsize = GET_SIZE(HDRP(bp));
-  size_t split_size = bsize - asize;
-
-
-  if (split_size <= OVERHEAD)  { //Not enough room for anything else except some overhead, do not split
-    PUT(HDRP(bp), PACK(bsize, 1));
-    PUT(FTRP(bp), PACK(bsize, 1));
-  }
-  else {
-    split_after_extend(bp, asize, bsize, split_size);  
-  }
-
-
-}
 /**********************************************************
  * mm_free
  * Free the block and coalesce with neighbouring blocks
@@ -385,7 +383,7 @@ void *mm_malloc(size_t size)
     /* Ignore spurious requests */
     if (size == 0)
         return NULL;
-
+    num_allocs++;
     /* Adjust block size to include overhead and alignment reqs. */
     if (size <= DSIZE)
         asize = DSIZE + OVERHEAD;
@@ -395,7 +393,7 @@ void *mm_malloc(size_t size)
     /* Search the free list for a fit */
     bp = find_fit(asize);
     if (bp != NULL) {
-        place_find_fit(bp, asize);
+        bp = place(bp, asize, 1);
         return bp;
     }
 
@@ -404,7 +402,7 @@ void *mm_malloc(size_t size)
     //extendsize = asize;
     if ((bp = extend_heap(extendsize/WSIZE)) == NULL)
         return NULL;
-    place_extend_heap(bp, asize);
+    bp = place(bp, asize, 0);
     return bp;
 
 }
