@@ -516,6 +516,17 @@ bool in_free_list(void * bp_implicit, size_t bsize){
 
 }
 
+
+bool in_implicit_list(void * bp_freelist) {
+
+    for (bp = heap_listp; GET_SIZE(HDRP(bp)) != 0 && GET_ALLOC(HDRP(bp)) != 1; bp = NEXT_BLKP(bp)){
+        if(bp == bp_freelist) 
+            return 1;
+    }
+    return 0;
+}
+
+
 /**********************************************************
  * mm_check
  * Check the consistency of the memory heap
@@ -526,8 +537,12 @@ int mm_check(void){
   void *bp;
   size_t bsize;
   int num_free_blocks_implicit = 0;
+  int num_free_blocks_free_lists = 0;
   bool is_prev_free = 0;
+  void* listp;
+  void* prev;
   void *epilogue;
+  int i;
    
 
 
@@ -567,15 +582,19 @@ int mm_check(void){
 
       }
       //if footer doesn't match the header heap is incosistent
-      if(FTRP(bp) != HDRP(bp))
+      if(GET_SIZE(FTRP(bp)) != GET_SIZE(HDRP(bp)))
         return 0;
       
+      if(GET_ALLOC(FTRP(bp)) != GET_ALLOC(HDRP(bp)))
+        return 0;
+        
+      
       //if address is not 16 b aligned heap is inconsistent  
-      if(((uintptr_t)bp) % 16 != 0)
+      if(((uintptr_t)bp) % DWORD != 0)
           return 0;
           
       //if size of block is not divisible by 16 heap is inconsistent    
-      if(bsize % 16 != 0)
+      if(bsize % DWORD != 0)
           return 0;        
       
    }
@@ -583,23 +602,58 @@ int mm_check(void){
 
    epilogue = bp;
 
-   void* listp;
-   int i;
-   for(i=0; i<NUM_FREE_LISTS*WSIZE; i+=WSIZE){  
+  //for each free list
+    //for each block in a free list
+        //check if each block is 16 b aligned
+        //check that block is in correct segregated list by size
+        //check that the block can be found in the implicit list
+        //check that the header and the footer match
+        //check that the block is free 
+        //check that the previous of the current block correctly points to the last blocks next pointer
+        //check that the block is within the bounds of the heap
+  
+   for(i=0; i<NUM_FREE_LISTS*WSIZE; i+=WSIZE){
+        prev = NULL;  
         listp = free_listp + i;
         bp = GETP(listp);
-        for (; bp!=0; bp = GETP(bp)){
-
+        for (; bp!=0; bp = NEXT_FREE_BLOCK(bp)){
+            bsize = GET_SIZE(HDRP(bp));
+            //double word alligned address            
+            if(((uintptr_t)bp) % DWORD != 0)
+                return 0;
+            //size of block is double word aligned    
+            if(bsize % DWORD != 0)
+                return 0;    
+            //element is in wrong list
+            if (i != find_list(bsize))
+                return 0;
+            //can be found in the heap       
+            if (!in_implicit_list(bp))
+                return 0;
+            //header and footer match    
+            if (GET_SIZE(HDRP(bp)) != GET_SIZE(FTRP(bp)))
+                return 0;
+            if (GET_ALLOC(HDRP(bp)) != GET_ALLOC(FTRP(bp)))
+                return 0;
+            //block is not allocated    
+            if (GET_ALLOC(HDRP(bp)) != 0)
+                return 0;
+            //prev of the current block is equal to the pointer of the last block executed in loop    
+            if (prev != PREV_FREE_BLOCK(bp))
+                return 0;
+            //past the end of the heap    
+            if (bp > epilogue)
+                return 0;
+            //past the beginning of the heap    
+            if (bp < heaplistp)
+                return 0;    
+            num_free_blocks_free_lists++;
+            prev = bp;        
         }
-   }
- 
- //for each free list
-  
-  //check if each block is 16 b aligned in heap 
-  //check if each block in free list is 16 b aligned
-  //check if prev and next block consistency
-  //count number of free blocks in all segregated list and compare with implicit list
-  
+  }
+  //compare count of free_blocks in free list to free blocks in implicit list
+  if (num_free_blocks_free_list != num_free_blocks_implicit)
+    return 0;
   return 1;
 }
 
