@@ -41,7 +41,7 @@ team_t team = {
 *************************************************************************/
 #define WSIZE       sizeof(void *)         /* word size (bytes) */
 #define DSIZE       (2 * WSIZE)            /* doubleword size (bytes) */
-#define CHUNKSIZE   (1<<14)      /* initial heap size (bytes) */
+#define CHUNKSIZE   (1<<12)      /* initial heap size (bytes) */
 #define OVERHEAD    DSIZE     /* overhead of header and footer (bytes) */
 
 #define MAX(x,y) ((x) > (y)?(x) :(y))
@@ -79,9 +79,9 @@ team_t team = {
 #define ALIGNMENT 16
 /* rounds up to the nearest multiple of ALIGNMENT */
 #define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~0xf)
-#define NUM_FREE_LISTS 15
-#define FREE_LIST_OVERHEAD 18
-#define BEGIN_HEAP 16
+#define NUM_FREE_LISTS 47 
+#define FREE_LIST_OVERHEAD NUM_FREE_LISTS + 3
+#define BEGIN_HEAP NUM_FREE_LISTS + 1
 void* heap_listp = NULL;
 void* free_listp = NULL;
 int num_allocs = 0;
@@ -99,23 +99,28 @@ int num_allocs = 0;
         PUT(heap_listp + (i * WSIZE), 0);                         // initialize free list pointers to 0 (NULL)
 
      }
-     free_listp=heap_listp;
+    free_listp=heap_listp;
 
     PUT(heap_listp +(NUM_FREE_LISTS * WSIZE), PACK(OVERHEAD, 1));   // prologue header
     PUT(heap_listp + ((NUM_FREE_LISTS+1) * WSIZE), PACK(OVERHEAD, 1));   // prologue footer
     PUT(heap_listp + ((NUM_FREE_LISTS + 2) * WSIZE), PACK(0, 1));    // epilogue header
     heap_listp += BEGIN_HEAP*WSIZE;
 
-     return 0;
+    return 0;
  }
 
+/**********************************************************
+ * find_list
+ * This function uses the size to figure out which segregated list to look into
+ * this returns the the index of the list with appropriate size (index is the offset from the beginning of the free list pointers)
+ **********************************************************/
 int find_list(size_t asize)
 {
     int i;
 
     //set currSize to 8, this is the second lowest range of free lists that we can have
     
-    int currSize = 512;
+    int currSize = 64;
     int retVal = -1;
     
     //if asize is less than currSize then we know at that iteration our index will point to the correct list
@@ -130,7 +135,7 @@ int find_list(size_t asize)
     if(retVal == -1)
         retVal = NUM_FREE_LISTS - 1;
 
-    return retVal * WSIZE; //returns the pointer to the free list we are looking at
+    return retVal * WSIZE; //returns the pointer to the free list we are looking at (multiplied by WSIZE since each list is a 1 word pointer)
 
 } 
 
@@ -238,10 +243,6 @@ void *extend_heap(size_t words)
 
     /* Coalesce if the previous block was free */
    bp = coalesce(bp);
-   //size = GET_SIZE(bp);
-   // PUT(HDRP(bp), PACK(size, 0));                // free block header
-   // PUT(FTRP(bp), PACK(size, 0));                // free block footer
-   // PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1));        // new epilogue header
    return bp;
 }
 
@@ -265,8 +266,6 @@ void * find_fit(size_t asize)
             {
                 return bp;
             }
-            //else if(GETP(bp)==0)
-            //    break;
         }
         listp = free_listp + i;
         bp = GETP(listp);
@@ -419,6 +418,7 @@ void *mm_realloc(void *ptr, size_t size)
       return NULL;
     }
 
+    //size_t extendsize; /* amount to extend heap if no fit */
     /* If old ptr is NULL, then this is just malloc. */
     if (ptr == NULL)
       return (mm_malloc(size));
@@ -449,6 +449,20 @@ void *mm_realloc(void *ptr, size_t size)
         return ptr;
 
     }
+    //else if(GET_ALLOC(HDRP(NEXT_BLKP(ptr))) && GET_SIZE(HDRP(NEXT_BLKP(ptr)))==0)
+    //{
+    //    extendsize = MAX(asize - currSize, CHUNKSIZE);
+    //    //extendsize = asize - currSize;
+    //    if ((ptr = extend_heap(extendsize/WSIZE)) == NULL)
+    //        return NULL;
+    //    ptr = place(oldptr, asize, 0);
+    //    PUT(HDRP(ptr), PACK(asize,1));
+    //    PUT(FTRP(ptr), PACK(asize,1));
+    //    return ptr;
+
+    //}
+
+
 
     
     newptr = mm_malloc(size);
