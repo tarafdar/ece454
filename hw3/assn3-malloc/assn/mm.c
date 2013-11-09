@@ -518,7 +518,7 @@ bool in_free_list(void * bp_implicit, size_t bsize){
 
 
 bool in_implicit_list(void * bp_freelist) {
-
+    void *bp;
     for (bp = heap_listp; GET_SIZE(HDRP(bp)) != 0 && GET_ALLOC(HDRP(bp)) != 1; bp = NEXT_BLKP(bp)){
         if(bp == bp_freelist) 
             return 1;
@@ -537,7 +537,7 @@ int mm_check(void){
   void *bp;
   size_t bsize;
   int num_free_blocks_implicit = 0;
-  int num_free_blocks_free_lists = 0;
+  int num_free_blocks_free_list = 0;
   bool is_prev_free = 0;
   void* listp;
   void* prev;
@@ -590,11 +590,11 @@ int mm_check(void){
         
       
       //if address is not 16 b aligned heap is inconsistent  
-      if(((uintptr_t)bp) % DWORD != 0)
+      if(((uintptr_t)bp) % DSIZE != 0)
           return 0;
           
       //if size of block is not divisible by 16 heap is inconsistent    
-      if(bsize % DWORD != 0)
+      if(bsize % DSIZE != 0)
           return 0;        
       
    }
@@ -619,10 +619,10 @@ int mm_check(void){
         for (; bp!=0; bp = NEXT_FREE_BLOCK(bp)){
             bsize = GET_SIZE(HDRP(bp));
             //double word alligned address            
-            if(((uintptr_t)bp) % DWORD != 0)
+            if(((uintptr_t)bp) % DSIZE != 0)
                 return 0;
             //size of block is double word aligned    
-            if(bsize % DWORD != 0)
+            if(bsize % DSIZE != 0)
                 return 0;    
             //element is in wrong list
             if (i != find_list(bsize))
@@ -645,9 +645,9 @@ int mm_check(void){
             if (bp > epilogue)
                 return 0;
             //past the beginning of the heap    
-            if (bp < heaplistp)
+            if (bp < heap_listp)
                 return 0;    
-            num_free_blocks_free_lists++;
+            num_free_blocks_free_list++;
             prev = bp;        
         }
   }
