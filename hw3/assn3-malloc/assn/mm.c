@@ -79,7 +79,7 @@ team_t team = {
 #define ALIGNMENT 16
 /* rounds up to the nearest multiple of ALIGNMENT */
 #define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~0xf)
-#define NUM_FREE_LISTS 47 
+#define NUM_FREE_LISTS 31 
 #define FREE_LIST_OVERHEAD NUM_FREE_LISTS + 3
 #define BEGIN_HEAP NUM_FREE_LISTS + 1
 void* heap_listp = NULL;
@@ -312,7 +312,7 @@ void* right_split(void* bp, size_t asize, size_t bsize, size_t split_size, bool 
  * place
  * Mark the block as allocated
  **********************************************************/
-void* place(void* bp, size_t asize, bool place_from_flist)
+void* place(void* bp, size_t asize, bool place_from_flist, bool realloc)
 {
   /* Get the current block size */
   size_t bsize = GET_SIZE(HDRP(bp));
@@ -330,6 +330,8 @@ void* place(void* bp, size_t asize, bool place_from_flist)
     if (num_allocs == 1)
        ret_ptr = right_split(bp, asize, bsize, split_size, place_from_flist);
     else if(num_allocs == 2) 
+       ret_ptr = left_split(bp, asize, bsize, split_size, place_from_flist);
+    else if(realloc)
        ret_ptr = left_split(bp, asize, bsize, split_size, place_from_flist);
     else {  
         int avg_size = (GET_SIZE(HDRP(NEXT_BLKP(bp))) + GET_SIZE(HDRP(PREV_BLKP(bp))))/ 2;
@@ -392,7 +394,7 @@ void *mm_malloc(size_t size)
     /* Search the free list for a fit */
     bp = find_fit(asize);
     if (bp != NULL) {
-        bp = place(bp, asize, 1);
+        bp = place(bp, asize, 1, 0);
         return bp;
     }
 
@@ -401,7 +403,7 @@ void *mm_malloc(size_t size)
     //extendsize = asize;
     if ((bp = extend_heap(extendsize/WSIZE)) == NULL)
         return NULL;
-    bp = place(bp, asize, 0);
+    bp = place(bp, asize, 0, 0);
     return bp;
 
 }
@@ -437,6 +439,10 @@ void *mm_realloc(void *ptr, size_t size)
     else
         asize = DSIZE * ((size + (OVERHEAD) + (DSIZE-1))/ DSIZE);
     if (asize<= currSize){
+      PUT(HDRP(ptr), PACK(currSize, 0));
+      PUT(FTRP(ptr), PACK(currSize, 0));
+      //ptr = left_split(ptr, asize, currSize, currSize - asize, 0);
+      ptr = place(ptr, asize, 0, 1);
       return ptr;   
         
     }    
@@ -444,8 +450,12 @@ void *mm_realloc(void *ptr, size_t size)
         
 
         remove_from_free_list(next, nextSize);
-        PUT(HDRP(ptr), PACK(currSize + nextSize,1));
-        PUT(FTRP(ptr), PACK(currSize + nextSize ,1));
+        //PUT(HDRP(ptr), PACK(currSize + nextSize,1));
+        //PUT(FTRP(ptr), PACK(currSize + nextSize ,1));
+        PUT(HDRP(ptr), PACK(currSize + nextSize,0));
+        PUT(FTRP(ptr), PACK(currSize + nextSize ,0));
+        //ptr = left_split(ptr, asize, currSize + nextSize, currSize + nextSize - asize, 0);
+        ptr = place(ptr, asize, 0, 1);
         return ptr;
 
     }
@@ -484,6 +494,23 @@ void *mm_realloc(void *ptr, size_t size)
  * Return nonzero if the heap is consistant.
  *********************************************************/
 int mm_check(void){
+   //implicit list (entire heap checks) 
+  //traverse through heap and look for all free blocks in their free lists
+  //check to see if in right list
+//check to see if last block doesn't go past epilogue
+//check if each blocks header and footer match
+//count number of free blocks in implicit list
+
+  //check no two consecuitve free blocks
+
+ 
+ //for each free list
+  
+  //check if each block is 16 b aligned in heap 
+  //check if each block in free list is 16 b aligned
+  //check if prev and next block consistency
+  //count number of free blocks in all segregated list and compare with implicit list
+  
   return 1;
 }
 
