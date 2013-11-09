@@ -488,21 +488,110 @@ void *mm_realloc(void *ptr, size_t size)
     return newptr;
 }
 
+
+/**********************************************************
+ * in_free_list
+ * Checks the correct free_list to see if the block that was in the implicit list
+ * can be found in the correct free_list. 
+ * Returns 1 if found, else returns 0
+
+ *********************************************************/
+
+
+
+bool in_free_list(void * bp_implicit, size_t bsize){
+
+  void* list= free_listp + find_list(bsize); //find the free list
+  void *bp; 
+  bp = GETP(list);  
+  for (; bp!=0; bp = GETP(bp)){
+    if (bp==bp_implicit)
+        return 1;
+
+  }
+
+  return 0;
+
+
+
+}
+
 /**********************************************************
  * mm_check
  * Check the consistency of the memory heap
  * Return nonzero if the heap is consistant.
  *********************************************************/
+
 int mm_check(void){
-   //implicit list (entire heap checks) 
-  //traverse through heap and look for all free blocks in their free lists
-  //check to see if in right list
-//check to see if last block doesn't go past epilogue
-//check if each blocks header and footer match
-//count number of free blocks in implicit list
+  void *bp;
+  size_t bsize;
+  int num_free_blocks_implicit = 0;
+  bool is_prev_free = 0;
+  void *epilogue;
+   
 
-  //check no two consecuitve free blocks
 
+  //implicit list (entire heap checks) 
+  //traverse through heap via the implicit list
+  //We will be checking
+  //a) If two consecutive blocks are free (checking to see if coalescing worked) 
+  //b) how many free nodes are in the list 
+  //   (we will compare this later with how many free nodes are in the segregated free lists)
+  //c) if every free node in the heap can be found in the appropriate segregated free list
+  //d) if the header and footer of every block matches in the heap
+  //e) if the address of each block is 16 b aligned
+  //f) if the size of each block is 16 b aligned
+
+  for(bp = heap_listp; GET_SIZE(HDRP(bp)) != 0 && GET_ALLOC(HDRP(bp)) != 1; bp = NEXT_BLKP(bp)){
+      bsize = GET_SIZE(HDRP(bp));
+     
+      //if block is free 
+      if(!GET_ALLOC(HDRP(bp))){
+        //two consecutive free blocks (failed coalescing), heap is inconsistent
+        if(is_prev_free)
+            return 0;
+        
+        //count how many free blocks in the implicit list
+        num_free_blocks_implicit++;
+       
+        //looks for the free block in the appropriate free list
+        //if free block can't be found in free list heap is incosistent
+        if(!in_free_list(bp, bsize)){
+            return 0;   
+        }
+        is_prev_free = 1; 
+
+      }
+      else{
+        is_prev_free = 0;
+
+      }
+      //if footer doesn't match the header heap is incosistent
+      if(FTRP(bp) != HDRP(bp))
+        return 0;
+      
+      //if address is not 16 b aligned heap is inconsistent  
+      if(((uintptr_t)bp) % 16 != 0)
+          return 0;
+          
+      //if size of block is not divisible by 16 heap is inconsistent    
+      if(bsize % 16 != 0)
+          return 0;        
+      
+   }
+
+
+   epilogue = bp;
+
+   void* listp;
+   int i;
+   for(i=0; i<NUM_FREE_LISTS*WSIZE; i+=WSIZE){  
+        listp = free_listp + i;
+        bp = GETP(listp);
+        for (; bp!=0; bp = GETP(bp)){
+
+        }
+   }
  
  //for each free list
   
