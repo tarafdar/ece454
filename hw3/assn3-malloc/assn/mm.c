@@ -1,12 +1,24 @@
 /*
- * This implementation replicates the implicit list implementation
- * provided in the textbook
- * "Computer Systems - A Programmer's Perspective"
- * Blocks are never coalesced or reused.
- * Realloc is implemented directly using mm_malloc and mm_free.
- *
- * NOTE TO STUDENTS: Replace this header comment with your own header
- * comment that gives a high level description of your solution.
+ * Our dynamic memory solution implements a segregated free list
+ * We have 15 segregated free lists, with  the first list having a range from 32 bytes to 63 bytes
+ * Each subsequent free list is double the range from the previous free list.  We also have our
+ * implicit list to keep track of the entire heap.
+ * The mm_malloc function looks for an available block in the correct free list (with respect to size) using first fit,
+ * if a free block of the requested size cannot be found, move to the next list. If none of the lists can support
+ * our block we extend the heap by the maximum between the requested size and chunksize (4096 bytes). 
+ * After a free block has been found (either in the free list or by extending the heap) we split the free block into 
+ * an allocated portion and a free portion.  We can choose to put the allocated portion of the free block on either
+ * the left hand side or the right hand side.  We decide this by looking at the two neighbouring allocated blocks and calculating
+ * the average size between them. If the allocated portion of our new block is larger than the average we would put it on the left
+ * side, else we put it on the right side. This is to ensure that similar sized blocks are together in memory and this reduces
+ * fragmentation.  
+ * In mm_free we put the new free block in the beginning of the appropriate free list (with respect to size). We then coalesce,
+ * which involves merging the blocks and removing the old free blocks from their respective free lists.  After coalescing we put the
+ * newly merged block into it's correct free list.
+ * In mm_realloc we wanted to remove the mem_copy overhead as much as possible.  We checked a few cases before resorting to copying
+ * the old contents into a newly allocated block.  The first case we looked at was if the requested size is smaller than the current 
+ * block size.  If so we return the same pointer after we split the block.  The second case was if the neighbouring free block and 
+ * the current block can support the new size, we would merge the blocks into an allocated block and then split the remainder. 
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,7 +100,7 @@ team_t team = {
 #define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~0xf)
 
 /* number of free lists */
-#define NUM_FREE_LISTS 31 
+#define NUM_FREE_LISTS 15 
 
 /* initial request of memory (in words) includes room for all free lists head,
 prologue, and epilogue*/ 
@@ -112,9 +124,6 @@ int mm_check(void);
 void* heap_listp = NULL;
 /*free_listp points to the beginning of the free_list headers*/
 void* free_listp = NULL;
-/*keeps track of the number of mallocs that has been called*/
-int num_allocs = 0;
-
 
 /**********************************************************
  * mm_init
@@ -123,7 +132,6 @@ int num_allocs = 0;
  **********************************************************/
  int mm_init(void)
  {
-   
    //extend the heap to make room for the free lists, prologue and the epilogue
    if ((heap_listp = mem_sbrk((INITIAL_HEAP)*WSIZE)) == (void *)-1)
          return -1;
@@ -452,17 +460,9 @@ void* place(void* bp, size_t asize, bool place_from_flist, bool realloc)
   }
   //room to split
   else {
-    //first alloc call put the block on the right
-    if (num_allocs == 1)
-       ret_ptr = right_split(bp, asize, bsize, split_size, place_from_flist);
-    //second alloc call put the block on the left
-    else if(num_allocs == 2) 
-       ret_ptr = left_split(bp, asize, bsize, split_size, place_from_flist);
     //place after realloc, put the block on the left
-    else if(realloc)
+    if(realloc)
        ret_ptr = left_split(bp, asize, bsize, split_size, place_from_flist);
-
-       
     else {  
         //calculate average size using the sizes of the two neighbouring allocated blocks
         avg_size = (GET_SIZE(HDRP(NEXT_BLKP(bp))) + GET_SIZE(HDRP(PREV_BLKP(bp))))/ 2;
@@ -539,7 +539,7 @@ void *mm_malloc(size_t size)
     /* Ignore spurious requests */
     if (size == 0)
         return NULL;
-    num_allocs++;
+    
     /* Adjust block size to include overhead and alignment reqs. */
     if (size <= DSIZE)
         asize = DSIZE + OVERHEAD;
@@ -556,11 +556,12 @@ void *mm_malloc(size_t size)
 
     /* No fit found. Get more memory and place the block */
     extendsize = MAX(asize, CHUNKSIZE);
-    //extendsize = asize;
+    
     if ((bp = extend_heap(extendsize/WSIZE)) == NULL)
         return NULL;
     //call place and tell it the block is not from a free list
     bp = place(bp, asize, 0, 0);
+    
     return bp;
 
 }
@@ -725,7 +726,6 @@ int mm_check(void){
   //f) if the size of each block is 16 b aligned
 
   for (bp = heap_listp; GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)){
-  //for(bp = heap_listp; !(GET_SIZE(HDRP(bp))) && GET_ALLOC(HDRP(bp)); bp = NEXT_BLKP(bp)){
       bsize = GET_SIZE(HDRP(bp));
      
       //if block is free 
