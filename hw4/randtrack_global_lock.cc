@@ -59,7 +59,8 @@ void* stream_process(void* thread_id){
   long tid = (long)thread_id;
   int start = tid*(NUM_SEED_STREAMS/num_threads);
   // process streams starting with different initial numbers
-  for (i=tid*start; i<start+(NUM_SEED_STREAMS/num_threads); i++){
+  for (i=start; i<start+(NUM_SEED_STREAMS/num_threads); i++){
+//  pthread_mutex_unlock(&lock);
     rnum = i;
     // collect a number of samples
     for (j=0; j<SAMPLES_TO_COLLECT; j++){
@@ -73,6 +74,7 @@ void* stream_process(void* thread_id){
       key = rnum % RAND_NUM_UPPER_BOUND;
 //beginning of critical section
       // if this sample has not been counted before
+  //   pthread_mutex_lock(&lock);
       if (!(s = h.lookup(key))){
 	
     	// insert a new element for it into the hash table
@@ -88,6 +90,7 @@ void* stream_process(void* thread_id){
 //end of critical section
       
     }
+// pthread_mutex_unlock(&lock);
   }
  pthread_mutex_unlock(&lock);
  return NULL;  
