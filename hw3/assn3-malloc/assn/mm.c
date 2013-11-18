@@ -119,7 +119,7 @@ prologue, and epilogue*/
 int mm_check(void);
 
 /*GLOBAL VARIABLES*/
-
+int num_allocs = 0;
 /*heap_listp points to the beginning of the heap*/
 void* heap_listp = NULL;
 /*free_listp points to the beginning of the free_list headers*/
@@ -447,7 +447,7 @@ void* place(void* bp, size_t asize, bool place_from_flist, bool realloc)
   int avg_size;
 
   //Not enough room for anything else except some overhead, do not split
-  if (split_size <= OVERHEAD*2)  {
+  if (split_size <= OVERHEAD *2)  {
     
     //allocate the block
     PUT(HDRP(bp), PACK(bsize, 1));
@@ -528,14 +528,15 @@ void *mm_malloc(size_t size)
     size_t asize; /* adjusted block size */
     size_t extendsize; /* amount to extend heap if no fit */
     char * bp;
-    
+   
+   
     #ifdef DEBUG
     if(mm_check()==0){
        printf("heap inconsistent\n");
        exit(1);
     }
+
     #endif
-    
     /* Ignore spurious requests */
     if (size == 0)
         return NULL;
@@ -724,10 +725,12 @@ int mm_check(void){
   //d) if the header and footer of every block matches in the heap
   //e) if the address of each block is 16 b aligned
   //f) if the size of each block is 16 b aligned
-
+  //g) count how many blocks are in the heap. We will then traverse through it backward using PREV_BLKP.
+  //   If after traversing backwards the same amount of times as the number of blocks in the heap we don't reach the prologue
+  //   then we know we have overlapping blocks as the number of blocks is not the same backwards and forwards
+  int num_blocks = 0;
   for (bp = heap_listp; GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)){
       bsize = GET_SIZE(HDRP(bp));
-     
       //if block is free 
       if(!GET_ALLOC(HDRP(bp))){
         //two consecutive free blocks (failed coalescing), heap is inconsistent
@@ -765,10 +768,14 @@ int mm_check(void){
       if(bsize % ALIGNMENT != 0)
           return 0;        
       
+      num_blocks++; 
    }
-
-
    epilogue = bp;
+   for(i=0; i<num_blocks;i++)
+       bp=PREV_BLKP(bp);   
+   if(GET_SIZE(HDRP(bp))!=16)
+       return 0;
+    
 
   //for each free list
     //for each block in a free list
