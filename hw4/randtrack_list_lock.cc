@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+#define LIST_LOCK
 #include "defs.h"
 #include "hash.h"
 
@@ -10,27 +11,27 @@
 #define RAND_NUM_UPPER_BOUND   100000
 #define NUM_SEED_STREAMS            4
 
+#define HASH_INDEX(_addr,_size_mask) (((_addr) >> 2) & (_size_mask))
 /* 
  * ECE454 Students: 
  * Please fill in the following team struct 
  */
 team_t team = {
-    "Naif_and_Jordan",                  /* Team name */
+    "Team Name",                  /* Team name */
 
-    "Naif Tarafdar",                    /* First member full name */
-    "997590566",                 /* First member student number */
-    "naif.tarafdar@mail.utoronto.ca",                 /* First member email address */
+    "AAA BBB",                    /* First member full name */
+    "9999999999",                 /* First member student number */
+    "AAABBB@CCC",                 /* First member email address */
 
-    "Jordan Zannier",                           /* Second member full name */
-    "997694810",                           /* Second member student number */
-    "jordan.zannier@mail.utoronto.ca"                            /* Second member email address */
+    "",                           /* Second member full name */
+    "",                           /* Second member student number */
+    ""                            /* Second member email address */
 };
-
 
 unsigned num_threads;
 unsigned samples_to_skip;
-pthread_mutex_t lock;
 
+#define MY_MASK  ((1 << 14) - 1)
 class sample;
 
 class sample {
@@ -50,15 +51,16 @@ class sample {
 // key value is "unsigned".  
 hash<sample,unsigned> h;
 void *stream_process(void * vargp){
-  int start = *((int *)vargp)*(NUM_SEED_STREAMS/num_threads);
+  int start = *((int *)vargp);
 
   int i,j,k;
   int rnum;
   unsigned key;
   sample *s;
+  int lock_index;
 
   //for (i=0; i<NUM_SEED_STREAMS; i++){
-  for (i=start; i<start + (NUM_SEED_STREAMS/num_threads); i++){
+  for (i=start; i<start + 1; i++){
     rnum = i;
 
     // collect a number of samples
@@ -71,7 +73,7 @@ void *stream_process(void * vargp){
 
       // force the sample to be within the range of 0..RAND_NUM_UPPER_BOUND-1
       key = rnum % RAND_NUM_UPPER_BOUND;
-      pthread_mutex_lock(&lock);
+      h.lock_list(key);
       // if this sample has not been counted before
       if (!(s = h.lookup(key))){
 	
@@ -82,7 +84,7 @@ void *stream_process(void * vargp){
 
       // increment the count for the sample
       s->count++;
-      pthread_mutex_unlock(&lock);
+      h.unlock_list(key);
     }
   }
   return NULL;
@@ -113,10 +115,11 @@ main (int argc, char* argv[]){
 
   // initialize a 16K-entry (2**14) hash of empty lists
   h.setup(14);
-  pthread_mutex_init(&lock, NULL);
   int i;
   int *index = (int *)malloc(sizeof(int)*num_threads);
   pthread_t* thrd = (pthread_t *)malloc(sizeof(pthread_t)*num_threads);
+
+
   for (i=0; i<num_threads; i++){
     index[i] = i;
     pthread_create(&thrd[i], NULL, stream_process, (void*)&(index[i]));

@@ -29,6 +29,7 @@ team_t team = {
 
 unsigned num_threads;
 unsigned samples_to_skip;
+pthread_mutex_t lock;
 
 class sample;
 
@@ -47,14 +48,49 @@ class sample {
 // it is a C++ template, which means we define the types for
 // the element and key value here: element is "class sample" and
 // key value is "unsigned".  
-hash<sample,unsigned> h;
+hash<sample,unsigned> h[4];
+void *stream_process(void * vargp){
+  int thread_num = *((int *)vargp);
+  int start = thread_num*(NUM_SEED_STREAMS/num_threads);
 
-int  
-main (int argc, char* argv[]){
   int i,j,k;
   int rnum;
   unsigned key;
   sample *s;
+
+  //for (i=0; i<NUM_SEED_STREAMS; i++){
+  for (i=start; i<start + (NUM_SEED_STREAMS/num_threads); i++){
+    rnum = i;
+
+    // collect a number of samples
+    for (j=0; j<SAMPLES_TO_COLLECT; j++){
+
+      // skip a number of samples
+      for (k=0; k<samples_to_skip; k++){
+	rnum = rand_r((unsigned int*)&rnum);
+      }
+
+      // force the sample to be within the range of 0..RAND_NUM_UPPER_BOUND-1
+      key = rnum % RAND_NUM_UPPER_BOUND;
+//      pthread_mutex_lock(&lock);
+      // if this sample has not been counted before
+      if (!(s = h[thread_num].lookup(key))){
+	
+	// insert a new element for it into the hash table
+	s = new sample(key);
+	h[thread_num].insert(s);
+      }
+
+      // increment the count for the sample
+      s->count++;
+  //    pthread_mutex_unlock(&lock);
+    }
+  }
+  return NULL;
+
+}
+int  
+main (int argc, char* argv[]){
 
   // Print out team information
   printf( "Team Name: %s\n", team.team );
@@ -77,36 +113,44 @@ main (int argc, char* argv[]){
   sscanf(argv[2], " %d", &samples_to_skip);
 
   // initialize a 16K-entry (2**14) hash of empty lists
-  h.setup(14);
+  pthread_mutex_init(&lock, NULL);
+  int i,j;
+  for(i=0; i<4;i++)
+  h[i].setup(14);
+  int *index = (int *)malloc(sizeof(int)*num_threads);
+  pthread_t* thrd = (pthread_t *)malloc(sizeof(pthread_t)*num_threads);
+  for (i=0; i<num_threads; i++){
+    index[i] = i;
+    pthread_create(&thrd[i], NULL, stream_process, (void*)&(index[i]));
 
-  // process streams starting with different initial numbers
-  for (i=0; i<NUM_SEED_STREAMS; i++){
-    rnum = i;
+  }
+  for (i=0; i<num_threads; i++){
+    pthread_join(thrd[i], NULL);
 
-    // collect a number of samples
-    for (j=0; j<SAMPLES_TO_COLLECT; j++){
-
-      // skip a number of samples
-      for (k=0; k<samples_to_skip; k++){
-	rnum = rand_r((unsigned int*)&rnum);
-      }
-
-      // force the sample to be within the range of 0..RAND_NUM_UPPER_BOUND-1
-      key = rnum % RAND_NUM_UPPER_BOUND;
-
-      // if this sample has not been counted before
-      if (!(s = h.lookup(key))){
-	
-	// insert a new element for it into the hash table
-	s = new sample(key);
-	h.insert(s);
-      }
-
-      // increment the count for the sample
-      s->count++;
-    }
   }
 
+  sample *s; 
+  sample *t;
+  // process streams starting with different initial numbers
+  for(i=1;i<num_threads;i++){
+    for(j=0;j<=RAND_NUM_UPPER_BOUND;j++){
+        s=h[i].lookup(j);
+        if(s!=NULL){
+            t=h[0].lookup(j);
+            if(t!=NULL)
+                t->count += s->count;    
+            else {
+                t = new sample(j);
+                t->count = s->count; 
+                h[0].insert(t);
+            }
+        }
+    } 
+  }
+
+
   // print a list of the frequency of all samples
-  h.print();
+  h[0].print();
+  free(thrd);
+  free(index);
 }
