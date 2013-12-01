@@ -58,7 +58,7 @@ class sample {
 // key value is "unsigned".  
 hash<sample,unsigned> h;
 void *stream_process(void * vargp){
-  int start = *((int *)vargp);
+  int start = *((int *)vargp)*(NUM_SEED_STREAMS/num_threads);
 
   int i,j,k;
   int rnum;
@@ -67,7 +67,7 @@ void *stream_process(void * vargp){
   int lock_index;
 
   //for (i=0; i<NUM_SEED_STREAMS; i++){
-  for (i=start; i<start + 1; i++){
+  for (i=start; i<start + (NUM_SEED_STREAMS/num_threads); i++){
     rnum = i;
 
     // collect a number of samples

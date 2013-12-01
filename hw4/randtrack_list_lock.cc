@@ -16,16 +16,17 @@
  * ECE454 Students: 
  * Please fill in the following team struct 
  */
+
 team_t team = {
-    "Team Name",                  /* Team name */
+    "Naif_and_Jordan",                  /* Team name */
 
-    "AAA BBB",                    /* First member full name */
-    "9999999999",                 /* First member student number */
-    "AAABBB@CCC",                 /* First member email address */
+    "Naif Tarafdar",                    /* First member full name */
+    "997590566",                 /* First member student number */
+    "naif.tarafdar@mail.utoronto.ca",                 /* First member email address */
 
-    "",                           /* Second member full name */
-    "",                           /* Second member student number */
-    ""                            /* Second member email address */
+    "Jordan Zannier",                           /* Second member full name */
+    "997694810",                           /* Second member student number */
+    "jordan.zannier@mail.utoronto.ca"                            /* Second member email address */
 };
 
 unsigned num_threads;
@@ -51,7 +52,7 @@ class sample {
 // key value is "unsigned".  
 hash<sample,unsigned> h;
 void *stream_process(void * vargp){
-  int start = *((int *)vargp);
+  int start = *((int *)vargp)*(NUM_SEED_STREAMS/num_threads);
 
   int i,j,k;
   int rnum;
@@ -60,7 +61,7 @@ void *stream_process(void * vargp){
   int lock_index;
 
   //for (i=0; i<NUM_SEED_STREAMS; i++){
-  for (i=start; i<start + 1; i++){
+  for (i=start; i<start + (NUM_SEED_STREAMS/num_threads); i++){
     rnum = i;
 
     // collect a number of samples
